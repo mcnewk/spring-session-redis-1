@@ -1,0 +1,7 @@
+spring:
+  redis:
+    host: ${redis.host.addr}
+    port: ${redis.port}
+  session:
+    store-type: redis
+    timeout: 1000

@@ -1,0 +1,81 @@
+version: "2"
+services:
+  appOne:
+    ports:
+      - "8081"
+    build:
+      context: ../../../
+      dockerfile: src/main/docker/app/Dockerfile
+    environment:
+      REDIS_HOST_ADDR: ${REDIS_HOST_ADDR}
+      REDIS_PORT: ${REDIS_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+    image: test/redis-sessions-test
+    networks:
+      - app-server
+      - web-server
+  appTwo:
+    ports:
+      - "8081"
+    build:
+      context: ../../../
+      dockerfile: src/main/docker/app/Dockerfile
+    environment:
+      REDIS_HOST_ADDR: ${REDIS_HOST_ADDR}
+      REDIS_PORT: ${REDIS_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+    image: test/redis-sessions-test
+    networks:
+      - app-server
+      - web-server
+  appThree:
+    ports:
+      - "8081"
+    build:
+      context: ../../../
+      dockerfile: src/main/docker/app/Dockerfile
+    environment:
+      REDIS_HOST_ADDR: ${REDIS_HOST_ADDR}
+      REDIS_PORT: ${REDIS_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+    image: test/redis-sessions-test
+    networks:
+      - app-server
+      - web-server
+  nginx:
+      ports:
+        - "80:80"
+      image: test/nginx-lb
+      build:
+        context: ./nginx
+        dockerfile: Dockerfile
+      depends_on:
+        - appOne
+        - appTwo
+        - appThree
+      networks:
+        - web-server
+        - app-server
+  spipedDecrypt:
+    image: spiped
+    volumes:
+      - "/tmp/spiped:/spiped:ro"
+    networks:
+      - crypto
+      - redis
+    command: "-d -s '[0.0.0.0]:17000' -t 'redis:6379'"
+  spipedEncrypt:
+    image: spiped
+    networks:
+      - app-server
+      - crypto
+    volumes:
+      - "/tmp/spiped:/spiped:ro"
+    command: "-e -s '[0.0.0.0]:16000' -t 'spipedDecrypt:17000'"
+networks:
+  app-server:
+  crypto:
+  web-server:
+  redis:
+    external:
+      name: rediscluster_default
